@@ -2,6 +2,9 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "folia-web",
   "main": "./worker/index.ts",
+  "build": {
+    "command": "VITE_NETEASE_API_BASE=https://netease-api.zenlydsp.top npm run build"
+  },
   "compatibility_date": "2026-04-02",
   "define": {
     "process.env.NODE_ENV": "\"production\"",
