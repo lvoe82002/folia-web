@@ -28,7 +28,7 @@ import { ponderLayerTokens, ponderWindowTokens } from './ponderTheme';
 const REVEAL_MS = 4000;
 
 /** 右上角热区的边长，px。按触摸目标给，不按视觉尺寸给。 */
-const HOTSPOT_SIZE_PX = 96;
+const HOTSPOT_SIZE_PX = 140;
 
 type PagePonderTouchButtonProps = {
     theme?: Theme;
