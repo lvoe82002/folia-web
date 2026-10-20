@@ -132,7 +132,7 @@ const PagePonderTouchButton: React.FC<PagePonderTouchButtonProps> = ({ theme, is
             aria-label={t('ponder.openPage')}
             // 收起来之后不可点：留着可点的话，右上角会变成一块看不见却能按的地方。
             // 出来时淡入、从略小长到位；关了微动效就只淡入淡出。
-            className={`fixed right-5 top-100 z-[190] h-12 w-12 rounded-full transition-[opacity,transform] active:scale-95 ${
+            className={`fixed right-5 top-60 z-[190] h-12 w-12 rounded-full transition-[opacity,transform] active:scale-95 ${
                 isRevealed ? 'pd-t-enter opacity-100' : `pd-t-base pointer-events-none opacity-0 ${calm ? '' : 'scale-[0.94]'}`
             }`}
             style={{ ...ponderLayerTokens(isDaylight, theme), ...ponderMotionTokens(calm) }}
