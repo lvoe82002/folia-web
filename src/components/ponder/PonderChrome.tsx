@@ -86,7 +86,7 @@ const PonderChrome: React.FC<PonderChromeProps> = ({
                     <b className="truncate font-semibold text-[color:var(--st-t1)]">{title}</b>
                 </div>
                 {/* 触屏没有 Esc，所以它是一颗看得出能点的按钮，键帽只是顺带说明。 */}
-                <button type="button" data-testid="ponder-exit" onClick={onExit} className={`${PONDER_TEXT_BUTTON_CLASS} mr-25`}>
+                <button type="button" data-testid="ponder-exit" onClick={onExit} className={`${PONDER_TEXT_BUTTON_CLASS} mr-40`}>
                     <PonderKeyCombo combo="Esc" {...PONDER_QUIET_CAP} />
                     {t('ponder.legend.exit')}
                 </button>
