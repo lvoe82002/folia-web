@@ -18,10 +18,14 @@ import { QQ_API_PREFIX, type QqServerlessEnv, handleQq } from "./qq.ts";
  */
 export { QqQrChannel } from "./qqQrChannel.ts";
 
+const KUGOU_API_PREFIX = "/api/kugou";
+const DEFAULT_KUGOU_API_ORIGIN = "https://ku-gou-music-api-chi-two.vercel.app";
+
 type Env = {
   ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
+  KUGOU_API_ORIGIN?: string;
   AI_PROVIDER?: string;
   GEMINI_API_KEY?: string;
   OPENAI_API_KEY?: string;
@@ -29,6 +33,24 @@ type Env = {
   OPENAI_API_MODEL?: string;
   OPENAI_API_TEMPERATURE?: string;
 } & QqServerlessEnv;
+
+/**
+ * 酷狗没有内置 serverless 运行时，这里把 `/api/kugou/*` 反向代理到独立部署的 KuGouMusicApi。
+ * 同源请求既避开跨域，也让国内网络不必直连 *.vercel.app。
+ */
+async function handleKugouProxy(request: Request, env: Env): Promise<Response> {
+  const origin = (env.KUGOU_API_ORIGIN || DEFAULT_KUGOU_API_ORIGIN).replace(/\/+$/, "");
+  const url = new URL(request.url);
+  const path = url.pathname.slice(KUGOU_API_PREFIX.length) || "/";
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  return fetch(`${origin}${path}${url.search}`, {
+    method: request.method,
+    headers,
+    body: request.method === "GET" || request.method === "HEAD" ? null : request.body,
+    redirect: "manual",
+  });
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -48,6 +70,19 @@ export default {
 
     if (url.pathname === "/api/segment-lyrics") {
       return handleSegmentLyrics(request, env);
+    }
+
+    // 酷狗路由同样自己兜住异常，避免代理失败把整站带下去。
+    if (url.pathname === KUGOU_API_PREFIX || url.pathname.startsWith(`${KUGOU_API_PREFIX}/`)) {
+      try {
+        return await handleKugouProxy(request, env);
+      } catch (error) {
+        console.error("[worker] kugou proxy route failed:", error);
+        return new Response(
+          JSON.stringify({ code: 502, message: "KuGou API proxy failed" }),
+          { status: 502, headers: { "content-type": "application/json; charset=utf-8" } },
+        );
+      }
     }
 
     // QQ 路由必须自己兜住异常：这个 worker 同时负责静态资源与既有三条 API，
