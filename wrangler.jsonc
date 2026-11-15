@@ -3,7 +3,7 @@
   "name": "folia-web",
   "main": "./worker/index.ts",
   "build": {
-    "command": "VITE_NETEASE_API_BASE=https://netease-api.zenlydsp.top VITE_QQ_API_BASE=/api/qq npm run build"
+    "command": "VITE_NETEASE_API_BASE=https://netease-api.zenlydsp.top VITE_QQ_API_BASE=/api/qq VITE_KUGOU_API_BASE=/api/kugou npm run build"
   },
   "compatibility_date": "2026-04-02",
   "define": {
