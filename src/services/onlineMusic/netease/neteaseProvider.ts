@@ -19,7 +19,7 @@ import { toFiniteNumber } from '../../../utils/replayGain';
 import { createProviderSongMetadata } from '../../../utils/songMetadata';
 import { NeteaseLoginHttpError, getNeteaseRemoteApiBase, neteaseApi, resolveNeteaseSongAvailability } from './netease';
 import i18n from '../../../i18n/config';
-import { removeProviderSessionValue, writeProviderSessionValue } from '../providerStorage';
+import { clearProviderSessionNamespace, removeProviderSessionValue, writeProviderSessionValue } from '../providerStorage';
 import { readNeteaseOldAccountCache, removeNeteaseOldAccountCache } from './neteaseOldAccountCache';
 import { collectNeteaseLoginDiagnostics } from './neteaseLoginDiagnostics';
 import { describeNeteaseLoginFailure, neteaseCheckFailure } from './neteaseLoginFailure';
@@ -134,6 +134,10 @@ const normalizeCollection = (raw: any, type = 'playlist'): ProviderCollection =>
 // of the account.
 const dropNeteaseSignIn = async (): Promise<void> => {
     removeProviderSessionValue('netease', 'cookie', ['netease_cookie']);
+    // 匿名 cookie 也去掉：否则下次启动会拿着它去问登录状态，界面上仍是"有人在"。
+    removeProviderSessionValue('netease', 'anonymous_cookie', ['netease_anonymous_cookie']);
+    // 该平台命名空间下的其它键一并清掉。
+    clearProviderSessionNamespace('netease');
     await removeNeteaseOldAccountCache();
 };
 
@@ -143,6 +147,9 @@ const describeQrResponse = (response: any): string => (
 );
 
 const yesNo = (value: boolean): string => (value ? 'yes' : 'no');
+
+// 退出登录的代次：登出之后才到达的登录状态答复一律不认，也不把凭据写回 localStorage。
+let signOutEpoch = 0;
 
 // 最近一次读登录状态的结论。扫码确认之后账号没读出来时，诊断报告靠它说是哪一个接口没给登录状态。
 let lastLoginStatusCheck: LoginDiagnosticLine | null = null;
@@ -398,6 +405,7 @@ export const neteaseProvider: OnlineMusicProvider = {
         getLoginTexts: () => ({ title: 'home.loginTitle', note: 'home.loginNote' }),
         localService: neteaseLocalService,
         async getLoginStatus() {
+            const epoch = signOutEpoch;
             const loginResponse = await neteaseApi.getLoginStatus();
             const loginProfile = loginResponse?.data?.profile;
             const loginCode = Number(loginResponse?.code ?? loginResponse?.data?.code);
@@ -416,6 +424,8 @@ export const neteaseProvider: OnlineMusicProvider = {
                 return null;
             }
 
+            // 这两个请求在路上时用户点了退出：结果作废，也不把 cookie 写回去。
+            if (epoch !== signOutEpoch) return null;
             if (typeof loginResponse?.cookie === 'string' && loginResponse.cookie) {
                 writeProviderSessionValue('netease', 'cookie', loginResponse.cookie);
             }
@@ -426,11 +436,11 @@ export const neteaseProvider: OnlineMusicProvider = {
         // and the cookie goes at once, before the first wait and whatever NetEase answers: what
         // asks whether an account is signed in (the explore page) finds none from then on.
         async logout() {
+            signOutEpoch += 1;
             const told = neteaseApi.logout();
             await Promise.all([dropNeteaseSignIn(), told]);
         },
         signInRanOut: dropNeteaseSignIn,
-        showsKeptAccountAtStart: true,
         oldKeptAccount: () => readNeteaseOldAccountCache({ user: normalizeUser, collection: normalizeCollection }),
         // 扫码三步：要码（unikey）→ 生成二维码图片 → 检查。没拿到 key 或图片就在那一步失败：空 key 去检查只会
         // 被拒绝，空图片会让登录窗口一直转圈。失败带着网易云的回答（cause），日志里看得到它回了什么。
