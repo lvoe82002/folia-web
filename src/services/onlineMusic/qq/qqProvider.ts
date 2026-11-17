@@ -1072,7 +1072,6 @@ export const qqProvider: OnlineMusicProvider = {
         logout,
         // The session this page keeps for the backend goes the same way.
         signInRanOut: logout,
-        showsKeptAccountAtStart: true,
         getLoginMethods,
         resolveLoginMethods,
         // 没拿到 key 或图片就在那一步失败：空 key 只会换来后端的 400，空图片会让登录窗口一直转圈。

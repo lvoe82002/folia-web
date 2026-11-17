@@ -53,6 +53,16 @@ export const writeProviderSessionValue = (providerId: OnlineProviderId, key: str
     if (typeof localStorage !== 'undefined') localStorage.setItem(getProviderSessionKey(providerId, key), value);
 };
 
+export const removeProviderSessionValue = (
+    providerId: OnlineProviderId,
+    key: string,
+    legacyKeys: string[] = [],
+): void => {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.removeItem(getProviderSessionKey(providerId, key));
+    legacyKeys.forEach(legacyKey => localStorage.removeItem(legacyKey));
+};
+
 // 把这个平台在 localStorage 里留下的每一个键都删掉（不只是主 cookie，
 // 例如网易云还有 anonymous_cookie，酷狗还有 token / dfid / userid）。
 export const clearProviderSessionNamespace = (providerId: OnlineProviderId): void => {

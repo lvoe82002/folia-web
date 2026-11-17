@@ -194,10 +194,10 @@ export const createAccountReads = <R>(deps: AccountReadsDeps<R>) => {
         return saved;
     };
 
-    // The account stays as it is shown, marked as failed.
+    // The account could not be confirmed: it is no longer shown as signed in.
     const markFailed = (providerId: OnlineProviderId, error: unknown): void => {
         store().updateAccount(providerId, {
-            status: shownUser(providerId) ? 'authenticated' : 'error',
+            status: 'error',
             error: messageOf(error),
             hydration: 'ready',
             freshness: 'error',

@@ -1252,7 +1252,6 @@ export const kugouProvider: OnlineMusicProvider = {
         },
         // The session KuGou no longer takes goes the same way as at a sign-out.
         signInRanOut: () => kugouProvider.auth!.logout(),
-        showsKeptAccountAtStart: true,
         async startLogin() {
             const response = await requestKugou('login_qr_key');
             const data = dataOf(response);

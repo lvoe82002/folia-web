@@ -235,7 +235,9 @@ const fetchWithCreds = async (endpoint: string, options: RequestInit = {}, limit
   const send = async (signal?: AbortSignal) => {
     let res: Response;
     try {
-      res = await fetch(finalUrl, { ...defaultOptions, credentials: 'include', ...(signal ? { signal } : {}) });
+      // 凭据本来就走 ?cookie=（见上面 227–231 行），不需要浏览器再带上/保存 API 域名的 Cookie。
+      // 默认的 same-origin 对同源部署（base 以 / 开头）仍然生效，跨域的 netease-api 则不再收/存 MUSIC_U。
+      res = await fetch(finalUrl, { ...defaultOptions, ...(signal ? { signal } : {}) });
     } catch (error) {
       // The API itself could not be reached (the local backend has exited, a remote API is down): not a
       // failure of NetEase's. The error names the route, keeps the fetch's own error as its cause, and
